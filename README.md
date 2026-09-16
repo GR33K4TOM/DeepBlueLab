@@ -12,8 +12,7 @@ casos de rescate, animales, expedientes medicos, especialistas, areas de
 experiencia y tratamientos, utilizando Java 21, Spring Boot 4, Spring Data JPA,
 Hibernate, Flyway, PostgreSQL y Testcontainers.
 
-No incluye controllers, servicios, DTOs ni frontend: esta dedicado
-exclusivamente a persistencia.
+No incluye la capa de controllers, ni frontend: No se usara sistemas transaccionales reales, ni API's reales de pagos.
 
 ## 3. Modelo de datos
 
@@ -144,3 +143,7 @@ Las pruebas de integracion comprueban restricciones `UNIQUE` (centros y
 dispositivos GPS), la clave foranea de los casos de rescate y el `CHECK` de
 estados validos. Tambien se prueba el escenario integrador de una tortuga
 marina, su expediente, especialista, expertise y tratamientos.
+
+## Capa de servicio
+
+- Ha sido añadida la capa de servicio y ha sido probada en pruebas de unidad, usando JUnit, Mockito, AssertJ
