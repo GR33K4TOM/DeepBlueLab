@@ -4,6 +4,11 @@
 
 DeepBlue Rescue
 
+
+## Version
+
+Release V-0.0.1
+
 ## 2. Descripción breve
 
 Plataforma backend completa para organizaciones dedicadas al rescate y rehabilitación de fauna marina. El proyecto está construido con una arquitectura de capas utilizando **Java 21**, **Spring Boot 4**, y **PostgreSQL**. Permite gestionar centros de recuperación, casos de rescate, animales, expedientes médicos, especialistas y tratamientos a través de una API REST robusta y probada.
