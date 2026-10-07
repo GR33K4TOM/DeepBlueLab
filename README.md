@@ -12,7 +12,7 @@ Release V-0.0.1
 ## 2. Descripción breve
 
 Plataforma backend completa para organizaciones dedicadas al rescate y rehabilitación de fauna marina. El proyecto está construido con una arquitectura de capas utilizando **Java 21**, **Spring Boot 4**, y **PostgreSQL**. Permite gestionar centros de recuperación, casos de rescate, animales, expedientes médicos, especialistas y tratamientos a través de una API REST robusta y probada.
-
+No incluye frontend; No se usara sistemas transaccionales reales, ni API's reales de pagos.
 ## 3. Arquitectura y Capas del Proyecto
 
 El sistema está dividido en las siguientes capas lógicas:
@@ -23,6 +23,75 @@ Se encarga exclusivamente del almacenamiento y recuperación de datos.
 - **Migraciones:** Flyway (`V1`, `V2`, `V3`) gestiona y versiona el esquema de la base de datos de manera automatizada.
 - **Entidades:** Mapeo relacional usando anotaciones JPA (`@Entity`, `@OneToMany`, `@ManyToMany`, etc.).
 - **Consultas:** Uso de *Query Methods* y consultas *JPQL* personalizadas.
+
+Las pruebas levantan un contenedor PostgreSQL `postgres:18-alpine` mediante
+Testcontainers y `@ServiceConnection`. No se utiliza H2.
+
+## 7. Explicacion de Flyway
+
+Flyway es responsable de crear y evolucionar el esquema de forma versionada.
+Las migraciones viven en `src/main/resources/db/migration`:
+
+- `V1__create_schema.sql`: crea las tablas con PK, FK, UNIQUE, CHECK e indices.
+- `V2__insert_expertise_catalog.sql`: inserta el catalogo inicial de expertise.
+- `V3__add_tracking_device_to_animal.sql`: agrega el codigo opcional y unico del
+  dispositivo GPS.
+
+Cada migracion aplicada queda registrada en `flyway_schema_history`. Como el
+esquema lo gestiona Flyway, Hibernate no crea ni actualiza tablas: se configura
+`ddl-auto: validate`, de modo que Hibernate solo comprueba que sus entidades son
+coherentes con el esquema existente.
+
+## 8. Explicacion de Testcontainers
+
+Testcontainers ejecuta los tests de integracion contra una instancia real de
+PostgreSQL levantada en un contenedor Docker desechable. La clase
+`PersistenceIntegrationTest` declara un contenedor `postgres:18-alpine` con
+`@Container` y `@ServiceConnection`, por lo que Spring Boot configura
+automaticamente el datasource apuntando a ese contenedor. Esto permite comprobar
+constraints reales (UNIQUE, FK, CHECK), el comportamiento de Flyway y el
+funcionamiento de JPA/Hibernate contra PostgreSQL genuino.
+
+## 9. Query Methods implementados
+
+- `RescueCenterRepository.findByCode(String)`
+- `RescueCaseRepository.findByCaseCode(String)`
+- `RescueCaseRepository.findByStatusOrderByRescueDateAsc(RescueStatus)`
+- `RescueCaseRepository.findByRescueCenterCode(String)`
+- `RescueCaseRepository.findByRescueDateAfterOrderByRescueDateDesc(LocalDate)`
+- `AnimalRepository.findByAnimalCode(String)`
+- `AnimalRepository.findByCommonNameContainingIgnoreCase(String)`
+- `AnimalRepository.findByRescueCaseStatus(RescueStatus)`
+- `AnimalRepository.findByRescueCaseRescueCenterCode(String)`
+- `MedicalRecordRepository.findByAnimalId(Long)`
+- `ExpertiseRepository.findByNameIgnoreCase(String)`
+- `TreatmentRepository.findByAnimalIdOrderByPerformedAtAsc(Long)`
+
+## 10. Consultas JPQL implementadas
+
+- `RescueCaseRepository.findByCaseCodeWithAnimal(String)`: caso por codigo con
+  `JOIN FETCH` del animal asociado.
+- `SpecialistRepository.findActiveByExpertise(String)`: especialistas activos
+  con determinada experiencia (`JOIN`, `LOWER`, `active = true`, `ORDER BY`).
+- `TreatmentRepository.findPerformedBetween(start, end)`: tratamientos entre dos
+  fechas (`between`, orden ASC).
+- `TreatmentRepository.findByRescueCenterCode(String)`: tratamientos de animales
+  de un centro (navega `Treatment -> Animal -> RescueCase -> RescueCenter`).
+- `TreatmentRepository.findBySpecialistExpertise(String)`: tratamientos de
+  especialistas con determinada experiencia (`JOIN`, `DISTINCT`).
+- `AnimalRepository.findByStatusAndTreatmentSpecialistExpertise(RescueStatus,
+  String)`: animales en un estado cuyos tratamientos fueron realizados por
+  especialistas con determinada experiencia (`DISTINCT`).
+
+Las consultas usan entidades y atributos Java, no nombres de tablas SQL ni SQL
+nativo.
+
+## Constraints probados
+
+Las pruebas de integracion comprueban restricciones `UNIQUE` (centros y
+dispositivos GPS), la clave foranea de los casos de rescate y el `CHECK` de
+estados validos. Tambien se prueba el escenario integrador de una tortuga
+marina, su expediente, especialista, expertise y tratamientos.
 
 ### Capa de Servicio 
 Es el "cerebro" de la aplicación. Contiene toda la lógica y reglas de negocio.
