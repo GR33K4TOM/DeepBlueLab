@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+## env ###
+
+.env
+
+### otros ###
+
+*Laboratorio*.pdf
+*Laboratorio*.md
+*DeepBlue*.md
+*DeepBlue*.pdf
+*[cC][aA][pP][aA]*.md   
+## ignorar up/low case
+*[cC][aA][pP][aA]*.pdf
+## ignorar up/low case
