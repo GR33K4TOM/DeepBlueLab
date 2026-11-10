@@ -47,3 +47,4 @@ build/
 ## ignorar up/low case
 *[cC][aA][pP][aA]*.pdf
 ## ignorar up/low case
+Como-insertar-en-docker-postgres.md
